@@ -1,1 +1,1 @@
-web: uvicorn main:app
+web: uvicorn main:app --host https://matma-backend.herokuapp.com
