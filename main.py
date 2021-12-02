@@ -26,7 +26,7 @@ def main():
     return True
 
 
-@app.post("/users/", response_model=User)
+@app.post("/users/create/", response_model=User)
 def create_user(user: UserBase, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_name(db, name=user.name)
     if db_user:
