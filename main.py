@@ -5,11 +5,25 @@ import models
 from sqlalchemy.orm import Session
 from fastapi import Depends, FastAPI, HTTPException
 from typing import List
-
+from fastapi.middleware.cors import CORSMiddleware
 
 models.Base.metadata.create_all(bind=engine)
 
+
 app = FastAPI()
+
+origins = [
+    "https://matma-backend.herokuapp.com/users/create/",
+    "https://matma-backend.herokuapp.com/users/",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # Dependency
@@ -19,11 +33,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
-
-@app.get('/')
-def main():
-    return True
 
 
 @app.post("/users/create/", response_model=User)
