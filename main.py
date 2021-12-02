@@ -12,16 +12,13 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-origins = [
-    "https://matma-backend.herokuapp.com/users/create/",
-    "https://matma-backend.herokuapp.com/users/",
-]
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=['GET', 'POST', 'OPTIONS'],
     allow_headers=["*"],
 )
 
