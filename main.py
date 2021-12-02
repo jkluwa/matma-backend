@@ -1,12 +1,11 @@
+from database import SessionLocal, engine
+from schemas import User, UserBase
+import crud
+import models
+from sqlalchemy.orm import Session
+from fastapi import Depends, FastAPI, HTTPException
 from typing import List
 
-from fastapi import Depends, FastAPI, HTTPException
-from sqlalchemy.orm import Session
-
-import models
-import crud
-from schemas import User, UserBase
-from database import SessionLocal, engine
 
 models.Base.metadata.create_all(bind=engine)
 
