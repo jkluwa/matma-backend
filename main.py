@@ -39,8 +39,7 @@ def create_user(user: UserBase, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_name(db, name=user.name)
     if db_user:
         raise HTTPException(status_code=400, detail="name already used")
-    crud.create_user(db=db, user=user)
-    return signJWT(user.name)
+    return (signJWT(user.name), crud.create_user(db=db, user=user))
 
 
 @app.get("/users/", response_model=List[User])
