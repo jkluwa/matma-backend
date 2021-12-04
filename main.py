@@ -2,10 +2,12 @@ from database import SessionLocal, engine
 from schemas import User, UserBase
 import crud
 import models
+from auth_handler import signJWT
 from sqlalchemy.orm import Session
 from fastapi import Depends, FastAPI, HTTPException
 from typing import List
 from fastapi.middleware.cors import CORSMiddleware
+
 
 models.Base.metadata.create_all(bind=engine)
 
