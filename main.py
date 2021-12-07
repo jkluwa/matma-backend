@@ -39,7 +39,7 @@ def get_db():
 def admin_login(password: str):
     hashGen = hashlib.md5()
     hashGen.update(password.encode('utf-8'))
-    if(hashGen.hexdigest() == 'ae5eb1f7a3ffad61698c54097d74c745'):
+    if(hashGen.hexdigest() == '15019430d55d53cb89952690c7d12d92'):
         return True
     else:
         return False
