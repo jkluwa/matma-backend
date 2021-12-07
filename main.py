@@ -3,6 +3,7 @@ from schemas import User, UserBase
 import crud
 import models
 from auth_handler import signJWT
+import hashlib
 from sqlalchemy.orm import Session
 from fastapi import Depends, FastAPI, HTTPException
 from typing import List
@@ -32,6 +33,16 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+@app.post("/admin/")
+def admin_login(password: str):
+    hashGen = hashlib.md5()
+    hashGen.update(password.encode('utf-8'))
+    if(hashGen.hexdigest() == 'ae5eb1f7a3ffad61698c54097d74c745'):
+        return True
+    else:
+        return False
 
 
 @app.post("/users/create/")
