@@ -1,5 +1,5 @@
 from database import SessionLocal, engine
-from schemas import User, UserBase
+from schemas import User, UserBase, PasswordBase
 import crud
 import models
 from auth_handler import signJWT, decodeJWT
@@ -44,9 +44,9 @@ def admin_page(token: JWTBearer() = Depends()):
 
 
 @app.post("/admin/")
-def admin_login(password: str):
+def admin_login(password: PasswordBase):
     hashGen = hashlib.md5()
-    hashGen.update(password.encode('utf-8'))
+    hashGen.update(password.value.encode('utf-8'))
     if(hashGen.hexdigest() == '95534b8e09be683eb7a21dabdd23fcd3'):
         return signJWT('admin')
     else:
