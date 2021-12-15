@@ -2,12 +2,13 @@ from database import SessionLocal, engine
 from schemas import User, UserBase
 import crud
 import models
-from auth_handler import signJWT
+from auth_handler import signJWT, decodeJWT
 import hashlib
 from sqlalchemy.orm import Session
 from fastapi import Depends, FastAPI, HTTPException
 from typing import List
 from fastapi.middleware.cors import CORSMiddleware
+from auth_bearer import JWTBearer
 
 
 models.Base.metadata.create_all(bind=engine)
@@ -35,14 +36,21 @@ def get_db():
         db.close()
 
 
+@app.get("/admin/")
+def admin_page(token: JWTBearer() = Depends()):
+    if decodeJWT(token)["user"] != "admin":
+        return False
+    return True
+
+
 @app.post("/admin/")
 def admin_login(password: str):
     hashGen = hashlib.md5()
     hashGen.update(password.encode('utf-8'))
-    if(hashGen.hexdigest() == 'cc415ae08844507dd43130aca6fa7a92'):
-        return True
+    if(hashGen.hexdigest() == '95534b8e09be683eb7a21dabdd23fcd3'):
+        return signJWT('admin')
     else:
-        return False
+        return ""
 
 
 @app.post("/users/create/")
