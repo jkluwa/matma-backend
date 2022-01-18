@@ -5,7 +5,7 @@ import models
 from auth_handler import signJWT, decodeJWT
 import hashlib
 from sqlalchemy.orm import Session
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, WebSocket, websockets
 from typing import List
 from fastapi.middleware.cors import CORSMiddleware
 from auth_bearer import JWTBearer
@@ -51,6 +51,15 @@ def admin_login(password: PasswordBase):
         return signJWT('admin')
     else:
         return ""
+
+
+@app.websocket("/ws")
+async def listen_to_players(websocket: WebSocket):
+    await websocket.accept()
+
+    while True:
+        data = await websocket.receive_text()
+        await websocket.send_text(data)
 
 
 @app.post("/users/create/")
