@@ -5,7 +5,7 @@ import models
 from auth_handler import signJWT, decodeJWT
 import hashlib
 from sqlalchemy.orm import Session
-from fastapi import Depends, FastAPI, HTTPException, WebSocket, websockets
+from fastapi import Depends, FastAPI, HTTPException, WebSocket
 from typing import List
 from fastapi.middleware.cors import CORSMiddleware
 from auth_bearer import JWTBearer
