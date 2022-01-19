@@ -84,7 +84,7 @@ async def listen_to_players(websocket: WebSocket, name: str):
     await manager.connect(websocket, name)
     while True:
         data = await websocket.receive_text()
-        if(manager.isAdmin):
+        if(manager.isAdmin(websocket)):
             await manager.broadcast(data)
         else:
             await manager.sendToAdmin(data)
