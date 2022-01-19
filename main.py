@@ -65,7 +65,8 @@ class ConnectionManager:
         await websocket.accept()
         if(name == "admin"):
             self.admin = websocket
-        self.connections.append(websocket)
+        else:
+            self.connections.append(websocket)
 
     async def broadcast(self, data: str):
         for connection in self.connections:
