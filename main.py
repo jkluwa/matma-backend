@@ -53,13 +53,14 @@ def admin_login(password: PasswordBase):
         return ""
 
 
-@app.websocket("/ws")
-async def listen_to_players(websocket: WebSocket):
+@app.websocket("/ws/{name}")
+async def listen_to_players(websocket: WebSocket, name: str):
     await websocket.accept()
-
+    if(name == "admin"):
+        adminCon = websocket
     while True:
         data = await websocket.receive_text()
-        await websocket.broadcast(data)
+        await adminCon.send_text(data)
 
 
 @app.post("/users/create/")
