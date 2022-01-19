@@ -58,6 +58,9 @@ class ConnectionManager:
         self.connections: List[WebSocket] = []
         self.admin: WebSocket
 
+    def isAdmin(self, websocket: WebSocket):
+        return websocket == self.admin
+
     async def connect(self, websocket: WebSocket, name: str):
         await websocket.accept()
         if(name == "admin"):
@@ -80,7 +83,10 @@ async def listen_to_players(websocket: WebSocket, name: str):
     await manager.connect(websocket, name)
     while True:
         data = await websocket.receive_text()
-        await manager.sendToAdmin(data)
+        if(manager.isAdmin):
+            await manager.broadcast(data)
+        else:
+            await manager.sendToAdmin(data)
 
 
 @app.post("/users/create/")
