@@ -76,7 +76,7 @@ manager = ConnectionManager()
 
 @app.websocket("/ws/{name}")
 async def listen_to_players(websocket: WebSocket, name: str):
-    manager.connect(websocket, name)
+    await manager.connect(websocket, name)
     while True:
         data = await websocket.receive_text()
         await manager.sendToAdmin(data)
