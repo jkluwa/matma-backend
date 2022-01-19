@@ -56,6 +56,7 @@ def admin_login(password: PasswordBase):
 class ConnectionManager:
     def __init__(self):
         self.connections: List[WebSocket] = []
+        self.admin: WebSocket
 
     async def connect(self, websocket: WebSocket, name: str):
         await websocket.accept()
@@ -68,7 +69,7 @@ class ConnectionManager:
             await connection.send_text(data)
 
     async def sendToAdmin(self, data: str):
-        self.admin.send_text(data)
+        await self.admin.send_text(data)
 
 
 manager = ConnectionManager()
