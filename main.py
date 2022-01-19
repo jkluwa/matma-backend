@@ -59,7 +59,7 @@ async def listen_to_players(websocket: WebSocket):
 
     while True:
         data = await websocket.receive_text()
-        await websocket.send_text(data)
+        await websocket.broadcast(data)
 
 
 @app.post("/users/create/")
