@@ -56,10 +56,13 @@ def admin_login(password: PasswordBase):
 class ConnectionManager:
     def __init__(self):
         self.connections: List[WebSocket] = []
-        self.admin: WebSocket
+        self.admin: WebSocket = ''
 
     def isAdmin(self, websocket: WebSocket):
         return websocket == self.admin
+
+    def isAdminActive(self):
+        return (self.admin != '')
 
     async def connect(self, websocket: WebSocket, name: str):
         await websocket.accept()
@@ -88,6 +91,11 @@ async def listen_to_players(websocket: WebSocket, name: str):
             await manager.broadcast(data)
         else:
             await manager.sendToAdmin(data)
+
+
+@app.get("/active/admin")
+def checkIfAdminIsActive():
+    return manager.isAdminActive()
 
 
 @app.post("/users/create/")
