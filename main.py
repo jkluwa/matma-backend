@@ -7,7 +7,7 @@ from auth_handler import signJWT, decodeJWT
 import hashlib
 from sqlalchemy.orm import Session
 from fastapi import Depends, FastAPI, HTTPException, WebSocket, websockets
-from typing import List
+from typing import List, Dict
 from fastapi.middleware.cors import CORSMiddleware
 from auth_bearer import JWTBearer
 
@@ -56,7 +56,7 @@ def admin_login(password: PasswordBase):
 
 class ConnectionManager:
     def __init__(self):
-        self.connections: List[WebSocket] = []
+        self.connections: Dict[str, WebSocket] = []
         self.admin: WebSocket = null
         self.adminActive: bool = False
 
@@ -72,7 +72,7 @@ class ConnectionManager:
             self.admin = websocket
             self.adminActive = True
         else:
-            self.connections.append(websocket)
+            self.connections[name] = websocket
 
     async def broadcast(self, data: str):
         for connection in self.connections:
@@ -81,6 +81,13 @@ class ConnectionManager:
     async def sendToAdmin(self, data: str):
         await self.admin.send_text(data)
 
+    def disconnect(self, name: str):
+        if(name == "admin"):
+            self.adminActive = False
+            self.admin = null
+        else:
+            self.connections.pop(name)
+
 
 manager = ConnectionManager()
 
@@ -88,12 +95,15 @@ manager = ConnectionManager()
 @app.websocket("/ws/{name}")
 async def listen_to_players(websocket: WebSocket, name: str):
     await manager.connect(websocket, name)
-    while True:
-        data = await websocket.receive_text()
-        if(manager.isAdmin(websocket)):
-            await manager.broadcast(data)
-        else:
-            await manager.sendToAdmin(data)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            if(manager.isAdmin(websocket)):
+                await manager.broadcast(data)
+            else:
+                await manager.sendToAdmin(data)
+    except:
+        manager.disconnect(name)
 
 
 @app.get("/active/admin")
