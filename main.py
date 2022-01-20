@@ -112,11 +112,6 @@ async def check_admin_active(websocket: WebSocket):
         await websocket.send_text(manager.isAdminActive())
 
 
-@app.get("/active/admin")
-def checkIfAdminIsActive():
-    return manager.isAdminActive()
-
-
 @app.post("/users/create/")
 def create_user(user: UserBase, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_name(db, name=user.name)
