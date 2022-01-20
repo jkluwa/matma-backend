@@ -60,9 +60,6 @@ class ConnectionManager:
         self.admin: WebSocket = null
         self.adminActive: bool = False
 
-    def isAdmin(self, websocket: WebSocket):
-        return websocket == self.admin
-
     def isAdminActive(self):
         return self.admin != null
 
@@ -85,6 +82,7 @@ class ConnectionManager:
         if(name == "admin"):
             self.adminActive = False
             self.admin = null
+
         else:
             self.connections.pop(name)
 
@@ -98,10 +96,21 @@ async def listen_to_players(websocket: WebSocket, name: str):
     try:
         while True:
             data = await websocket.receive_text()
-            if(manager.isAdmin(websocket)):
+            if(name == "admin"):
                 await manager.broadcast(data)
             else:
                 await manager.sendToAdmin(data)
+    except:
+        manager.disconnect(name)
+
+
+@app.websocket("/active/admin")
+async def check_admin_active(websocket: WebSocket, name: str):
+    await manager.connect(websocket, name)
+    try:
+        while True:
+            await websocket.receive_text()
+            await websocket.send_text(manager.isAdminActive())
     except:
         manager.disconnect(name)
 
