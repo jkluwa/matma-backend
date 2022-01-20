@@ -56,13 +56,13 @@ def admin_login(password: PasswordBase):
 class ConnectionManager:
     def __init__(self):
         self.connections: List[WebSocket] = []
-        self.admin: WebSocket = ''
+        self.admin: WebSocket
 
     def isAdmin(self, websocket: WebSocket):
         return websocket == self.admin
 
     def isAdminActive(self):
-        return (self.admin != '')
+        return (self.admin)
 
     async def connect(self, websocket: WebSocket, name: str):
         await websocket.accept()
