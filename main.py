@@ -1,3 +1,4 @@
+from sqlalchemy import null
 from database import SessionLocal, engine
 from schemas import User, UserBase, PasswordBase
 import crud
@@ -56,7 +57,7 @@ def admin_login(password: PasswordBase):
 class ConnectionManager:
     def __init__(self):
         self.connections: List[WebSocket] = []
-        self.admin: WebSocket
+        self.admin: WebSocket = null
 
     def isAdmin(self, websocket: WebSocket):
         return websocket == self.admin
