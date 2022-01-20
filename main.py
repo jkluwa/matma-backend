@@ -58,17 +58,19 @@ class ConnectionManager:
     def __init__(self):
         self.connections: List[WebSocket] = []
         self.admin: WebSocket = null
+        self.adminActive: bool = False
 
     def isAdmin(self, websocket: WebSocket):
         return websocket == self.admin
 
     def isAdminActive(self):
-        return (self.admin == True)
+        return self.adminActive
 
     async def connect(self, websocket: WebSocket, name: str):
         await websocket.accept()
         if(name == "admin"):
             self.admin = websocket
+            self.adminActive = True
         else:
             self.connections.append(websocket)
 
