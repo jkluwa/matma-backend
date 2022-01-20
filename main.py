@@ -106,6 +106,7 @@ async def listen_to_players(websocket: WebSocket, name: str):
 
 @app.websocket("/active/admin")
 async def check_admin_active(websocket: WebSocket):
+    await websocket.accept()
     while True:
         await websocket.receive_text()
         await websocket.send_text(manager.isAdminActive())
