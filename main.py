@@ -68,6 +68,7 @@ class ConnectionManager:
         if(name == "admin"):
             self.admin = websocket
             self.adminActive = True
+            self.broadcast("adminEntered")
         else:
             self.connections[name] = websocket
 
@@ -104,12 +105,17 @@ async def listen_to_players(websocket: WebSocket, name: str):
         manager.disconnect(name)
 
 
-@app.websocket("/active/admin")
-async def check_admin_active(websocket: WebSocket):
-    await websocket.accept()
+@app.websocket("/active/admin/{name}")
+async def check_admin_active(websocket: WebSocket, name: str):
+    await manager.connect(websocket, name)
     while True:
-        await websocket.receive_text()
-        await websocket.send_text(manager.isAdminActive())
+        data = await websocket.receive_text()
+        await websocket.send_text(data)
+
+
+@app.get("/active/admin/http")
+def check_admin_active_http():
+    return manager.isAdminActive()
 
 
 @app.post("/users/create/")
