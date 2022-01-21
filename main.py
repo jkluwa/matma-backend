@@ -64,13 +64,13 @@ class ConnectionManager:
     def isAdminActive(self):
         return self.admin != null
 
-    async def connect(self, websocket: WebSocket, name: Optional[str] = null):
+    async def connect(self, websocket: WebSocket, name: Optional[str] = ""):
         await websocket.accept()
         if(name == "admin"):
             self.admin = websocket
             self.adminActive = True
             await self.broadcast("adminEntered")
-        elif(name):
+        elif(name != ""):
             self.connections[name] = websocket
         else:
             self.guests.append(websocket)
