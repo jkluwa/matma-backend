@@ -6,7 +6,7 @@ import models
 from auth_handler import signJWT, decodeJWT
 import hashlib
 from sqlalchemy.orm import Session
-from fastapi import Depends, FastAPI, HTTPException, WebSocket, websockets
+from fastapi import Depends, FastAPI, HTTPException, WebSocket
 from typing import List, Dict, Optional
 from fastapi.middleware.cors import CORSMiddleware
 from auth_bearer import JWTBearer
@@ -113,9 +113,12 @@ async def listen_to_players(websocket: WebSocket, name: str):
 @app.websocket("/ws/active/admin")
 async def check_admin_active(websocket: WebSocket):
     await manager.connect(websocket)
-    while True:
-        data = await websocket.receive_text()
-        await websocket.send_text(data)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await websocket.send_text(data)
+    except:
+        print('chuj')
 
 
 @app.get("/active/admin/http")
