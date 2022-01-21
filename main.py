@@ -92,6 +92,9 @@ class ConnectionManager:
         else:
             self.connections.pop(name)
 
+    def destroyGuest(self, websocket: WebSocket):
+        del self.guests[self.guests.index(websocket)]
+
 
 manager = ConnectionManager()
 
@@ -118,7 +121,7 @@ async def check_admin_active(websocket: WebSocket):
             data = await websocket.receive_text()
             await websocket.send_text(data)
     except:
-        print('chuj')
+        manager.destroyGuest(websocket)
 
 
 @app.get("/active/admin/http")
