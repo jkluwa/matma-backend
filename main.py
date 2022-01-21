@@ -69,7 +69,7 @@ class ConnectionManager:
         if(name == "admin"):
             self.admin = websocket
             self.adminActive = True
-            self.broadcast("adminEntered")
+            await self.broadcast("adminEntered")
         elif(name):
             self.connections[name] = websocket
         else:
