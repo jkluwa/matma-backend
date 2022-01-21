@@ -110,7 +110,7 @@ async def listen_to_players(websocket: WebSocket, name: str):
         manager.disconnect(name)
 
 
-@app.websocket("/active/admin")
+@app.websocket("/ws/active/admin")
 async def check_admin_active(websocket: WebSocket):
     await manager.connect(websocket)
     while True:
