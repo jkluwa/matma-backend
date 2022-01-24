@@ -62,7 +62,7 @@ class ConnectionManager:
         self.adminActive: bool = False
 
     def isAdminActive(self):
-        return self.admin != null
+        return self.adminActive
 
     async def connect(self, websocket: WebSocket, name: Optional[str] = ""):
         await websocket.accept()
