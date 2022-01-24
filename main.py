@@ -59,7 +59,7 @@ class ConnectionManager:
         self.connections: Dict[str, WebSocket] = []
         self.guests: List = []
         self.admin: WebSocket = null
-        self.adminActive: bool = False
+        self.adminActive: bool
 
     def isAdminActive(self):
         return self.adminActive
