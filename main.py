@@ -63,8 +63,8 @@ class ConnectionManager:
         self.count: int = 0
 
     async def connect(self, websocket: WebSocket, name: Optional[str] = ""):
-        self.count += 1
-        print(self.count)
+        print(self.adminActive)
+        print(self.guests)
         await websocket.accept()
         if(name == "admin"):
             self.admin = websocket
