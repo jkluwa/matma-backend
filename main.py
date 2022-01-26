@@ -71,7 +71,7 @@ class ConnectionManager:
         elif(name != ""):
             self.connections[name] = websocket
         else:
-            print("HALOHALLOO")
+            print(self.adminActive)
             self.guests.append(websocket)
 
     async def broadcast(self, data: str):
@@ -85,7 +85,6 @@ class ConnectionManager:
 
     def disconnect(self, name: str):
         if(name == "admin"):
-            print(self.adminActive)
             self.adminActive = False
             self.admin = null
 
