@@ -123,16 +123,14 @@ async def listen_to_players(websocket: WebSocket, name: str):
 async def check_admin_active(websocket: WebSocket):
     await manager.connect(websocket)
     try:
-        while True:
-            data = await websocket.receive_text()
-            await websocket.send_text(data)
+        if(manager.adminActive):
+            websocket.send_text("adminStarted")
+        else:
+            while True:
+                data = await websocket.receive_text()
+                await websocket.send_text(data)
     except:
         manager.destroyGuest(websocket)
-
-
-@app.get("/active/admin/http")
-def check_admin_active_http():
-    return manager.adminActive
 
 
 @app.post("/users/create/")
