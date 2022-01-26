@@ -65,13 +65,15 @@ class ConnectionManager:
     async def connect(self, websocket: WebSocket, name: Optional[str] = ""):
         await websocket.accept()
         if(name == "admin"):
+            print("ADMIN")
             self.admin = websocket
             self.adminActive = True
             await self.broadcast("adminEntered")
         elif(name != ""):
+            print("USER")
             self.connections[name] = websocket
         else:
-            print(self.adminActive)
+            print("GUEST")
             self.guests.append(websocket)
 
     async def broadcast(self, data: str):
