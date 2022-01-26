@@ -71,6 +71,7 @@ class ConnectionManager:
         elif(name != ""):
             self.connections[name] = websocket
         else:
+            print("HALOHALLOO")
             self.guests.append(websocket)
 
     async def broadcast(self, data: str):
