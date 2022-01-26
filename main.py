@@ -63,7 +63,9 @@ class ConnectionManager:
         self.count: int = 0
 
     async def connect(self, websocket: WebSocket, name: Optional[str] = ""):
+        print("connecting")
         await websocket.accept()
+        print("connected")
         if(name == "admin"):
             print("ADMIN")
             self.admin = websocket
