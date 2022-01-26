@@ -60,11 +60,11 @@ class ConnectionManager:
         self.guests: List = []
         self.admin: WebSocket = null
         self.adminActive: bool = False
-
-    def isAdminActive(self):
-        return self.adminActive
+        self.count: int = 0
 
     async def connect(self, websocket: WebSocket, name: Optional[str] = ""):
+        self.count += 1
+        print(self.count)
         await websocket.accept()
         if(name == "admin"):
             self.admin = websocket
@@ -94,6 +94,9 @@ class ConnectionManager:
 
     def destroyGuest(self, websocket: WebSocket):
         del self.guests[self.guests.index(websocket)]
+
+    def isAdminActive(self):
+        return self.adminActive
 
 
 manager = ConnectionManager()
