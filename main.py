@@ -23,7 +23,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=['GET', 'POST', 'OPTIONS'],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -59,7 +59,7 @@ class ConnectionManager:
         self.connections: Dict[str, WebSocket] = []
         self.guests: List = []
         self.admin: WebSocket = null
-        self.adminActive: bool
+        self.adminActive: bool = False
 
     def isAdminActive(self):
         return self.adminActive
