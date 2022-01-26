@@ -132,7 +132,7 @@ async def check_admin_active(websocket: WebSocket):
 
 @app.get("/active/admin/http")
 def check_admin_active_http():
-    return manager.isAdminActive()
+    return manager.adminActive
 
 
 @app.post("/users/create/")
