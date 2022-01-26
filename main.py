@@ -63,8 +63,6 @@ class ConnectionManager:
         self.count: int = 0
 
     async def connect(self, websocket: WebSocket, name: Optional[str] = ""):
-        print(self.adminActive)
-        print(self.guests)
         await websocket.accept()
         if(name == "admin"):
             self.admin = websocket
@@ -86,6 +84,7 @@ class ConnectionManager:
 
     def disconnect(self, name: str):
         if(name == "admin"):
+            print(self.adminActive)
             self.adminActive = False
             self.admin = null
 
