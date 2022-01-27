@@ -128,7 +128,7 @@ async def check_admin_active(websocket: WebSocket):
         else:
             while True:
                 data = await websocket.receive_text()
-                await websocket.send_text(data)
+                await manager.sendToAdmin(data)
     except:
         manager.destroyGuest(websocket)
 
