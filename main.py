@@ -124,7 +124,7 @@ async def check_admin_active(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         if(manager.adminActive):
-            websocket.send_text("adminStarted")
+            await websocket.send_text("adminStarted")
         else:
             while True:
                 data = await websocket.receive_text()
