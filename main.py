@@ -56,42 +56,56 @@ def admin_login(password: PasswordBase):
 
 class ConnectionManager:
     def __init__(self):
-        self.connections: Dict[str, WebSocket] = []
+        self.connections: Dict[str, WebSocket] = {}
         self.guests: List = []
         self.admin: WebSocket = null
         self.adminActive: bool = False
         self.count: int = 0
+        self.tasks: List = []
 
     async def connect(self, websocket: WebSocket, name: Optional[str] = ""):
-        print("connecting")
         await websocket.accept()
-        print("connected")
         if(name == "admin"):
-            print("ADMIN")
             self.admin = websocket
             self.adminActive = True
             await self.broadcast("adminEntered")
         elif(name != ""):
-            print("USER")
             self.connections[name] = websocket
         else:
-            print("GUEST")
             self.guests.append(websocket)
+            print(len(self.guests))
 
-    async def broadcast(self, data: str):
+    async def broadcast(self, data: str, db: Session = Depends(get_db)):
+        # SEND TO EVERY LOGGED USER
         for connection in self.connections:
-            await connection.send_text(data)
+            await self.connections[connection].send_text(data)
+        # SEND TO EVERY USER IN START PAGE
         for guest in self.guests:
-            await guest.send_text(data)
+            try:
+                await guest.send_text(data)
+            except:
+                del self.guests[self.guests.index(guest)]
+        # SEND INFO TO USERS THAT THE GAME STARTS
+        if(data == "Start"):
+            for i in range(1, len(self.connections), 2):
+                if(len(self.connections) == i+2):
+                    print("nieparzysta")
+                else:
+                    try:
+                        self.tasks.append(crud.get_task(db))
+                    except:
+                        print("KURWA")
+                    # await self.connections[i].send_text(self.tasks[len(self.tasks)-1])
+                    # await self.connections[i-1].send_text(self.tasks[len(self.tasks)-1])
 
     async def sendToAdmin(self, data: str):
         await self.admin.send_text(data)
 
     def disconnect(self, name: str):
+        print(name)
         if(name == "admin"):
             self.adminActive = False
             self.admin = null
-
         else:
             self.connections.pop(name)
 
@@ -123,12 +137,13 @@ async def listen_to_players(websocket: WebSocket, name: str):
 async def check_admin_active(websocket: WebSocket):
     await manager.connect(websocket)
     try:
-        if(manager.adminActive):
+        if(manager.isAdminActive()):
             await websocket.send_text("adminStarted")
         else:
             while True:
                 data = await websocket.receive_text()
-                await manager.sendToAdmin(data)
+                if(data == True):
+                    await manager.sendToAdmin(data)
     except:
         manager.destroyGuest(websocket)
 
@@ -142,15 +157,20 @@ def create_user(user: UserBase, db: Session = Depends(get_db)):
     return signJWT(user.name)
 
 
+@app.get("/testing/")
+def test(db: Session = Depends(get_db)):
+    return crud.get_task(db)
+
+
 @app.get("/users/", response_model=List[User])
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     users = crud.get_users(db, skip=skip, limit=limit)
     return users
 
 
-@app.get("/users/{user_id}", response_model=User)
-def read_user(user_id: int, db: Session = Depends(get_db)):
-    db_user = crud.get_user(db, user_id=user_id)
+@app.get("/users/{user_name}", response_model=User)
+def read_user(user_name: str, db: Session = Depends(get_db)):
+    db_user = crud.get_user(db, user_name=user_name)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
