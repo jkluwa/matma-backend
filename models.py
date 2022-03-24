@@ -15,6 +15,6 @@ class User(Base):
 class Task(Base):
     __tablename__ = "tasks"
 
-    task_id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     reference = Column(String)
     answer = Column(String)

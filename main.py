@@ -75,31 +75,27 @@ class ConnectionManager:
             self.guests.append(websocket)
             print(len(self.guests))
 
-    async def broadcast(self, data: str, db: Session = Depends(get_db)):
+    async def broadcast(self, data):
         # SEND TO EVERY LOGGED USER
         for connection in self.connections:
             await self.connections[connection].send_text(data)
-        # SEND TO EVERY USER IN START PAGE
+        # SEND TO EVERY USER IN HOME PAGE
         for guest in self.guests:
             try:
                 await guest.send_text(data)
             except:
                 del self.guests[self.guests.index(guest)]
-        # SEND INFO TO USERS THAT THE GAME STARTS
-        if(data == "Start"):
-            for i in range(1, len(self.connections), 2):
-                if(len(self.connections) == i+2):
-                    print("nieparzysta")
-                else:
-                    try:
-                        self.tasks.append(crud.get_task(db))
-                    except:
-                        print("KURWA")
-                    # await self.connections[i].send_text(self.tasks[len(self.tasks)-1])
-                    # await self.connections[i-1].send_text(self.tasks[len(self.tasks)-1])
 
-    async def sendToAdmin(self, data: str):
-        await self.admin.send_text(data)
+    async def broadcastJson(self, data):
+        for connection in self.connections:
+            await self.connections[connection].send_json(data)
+
+    async def sendToAdmin(self, data):
+        if(type(data) == type([])):
+            print("TAK")
+            await self.admin.send_json(data)
+        else:
+            await self.admin.send_text(data)
 
     def disconnect(self, name: str):
         print(name)
@@ -120,13 +116,24 @@ manager = ConnectionManager()
 
 
 @app.websocket("/ws/{name}")
-async def listen_to_players(websocket: WebSocket, name: str):
+async def listen_to_players(websocket: WebSocket, name: str, db: Session = Depends(get_db)):
     await manager.connect(websocket, name)
     try:
         while True:
             data = await websocket.receive_text()
             if(name == "admin"):
-                await manager.broadcast(data)
+                if(data == "Start"):
+                    for i in range(1, len(manager.connections), 2):
+                        if(len(manager.connections) == i+2):
+                            print("nieparzysta")
+                        else:
+                            manager.tasks.append([list(manager.connections)[i], list(
+                                manager.connections)[i-1], crud.get_task(db).reference])
+                            await manager.connections[list(manager.connections)[i]].send_text(manager.tasks[len(manager.tasks)-1][1] + "_" + manager.tasks[len(manager.tasks)-1][2])
+                            await manager.connections[list(manager.connections)[i-1]].send_text(manager.tasks[len(manager.tasks)-1][0] + "_" + manager.tasks[len(manager.tasks)-1][2])
+                        await manager.sendToAdmin(manager.tasks)
+                else:
+                    await manager.broadcast(data)
             else:
                 await manager.sendToAdmin(data)
     except:
@@ -159,7 +166,9 @@ def create_user(user: UserBase, db: Session = Depends(get_db)):
 
 @app.get("/testing/")
 def test(db: Session = Depends(get_db)):
-    return crud.get_task(db)
+    cr = crud.get_task(db)
+    print(cr.reference)
+    return cr
 
 
 @app.get("/users/", response_model=List[User])
