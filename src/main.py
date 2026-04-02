@@ -1,0 +1,213 @@
+from sqlalchemy import null
+from database import SessionLocal, engine
+from schemas import User, UserBase, PasswordBase, TaskResponse, TaskBase
+import crud
+import models
+from auth_handler import signJWT, decodeJWT
+import hashlib
+from sqlalchemy.orm import Session
+from fastapi import Depends, FastAPI, HTTPException, WebSocket
+from typing import List, Dict, Optional
+from fastapi.middleware.cors import CORSMiddleware
+from auth_bearer import JWTBearer
+from config import settings
+
+ADMIN_PASSWORD = settings.ADMIN_PASSWORD
+
+models.Base.metadata.create_all(bind=engine)
+
+
+app = FastAPI()
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@app.get("/admin/")
+def admin_page(token: JWTBearer() = Depends()):
+    if decodeJWT(token)["user"] != "admin":
+        return False
+    return True
+
+
+@app.post("/admin/")
+def admin_login(password: PasswordBase):
+    if password.value == ADMIN_PASSWORD:
+        return signJWT("admin")
+    else:
+        return ""
+
+@app.post("/tasks", response_model=TaskResponse)
+def create_task(task: TaskBase, db: Session = Depends(get_db)):
+    new_task = models.Task(reference=task.reference, answer=task.answer)
+    
+    db.add(new_task)
+    db.commit()
+    
+    db.refresh(new_task)
+    return new_task
+
+class ConnectionManager:
+    def __init__(self):
+        self.connections: Dict[str, WebSocket] = {}
+        self.guests: List = []
+        self.admin: WebSocket = null
+        self.adminActive: bool = False
+        self.count: int = 0
+        self.tasks: List = []
+
+    async def connect(self, websocket: WebSocket, name: Optional[str] = ""):
+        await websocket.accept()
+        if name == "admin":
+            self.admin = websocket
+            self.adminActive = True
+            await self.broadcast("adminEntered")
+        elif name != "":
+            self.connections[name] = websocket
+        else:
+            self.guests.append(websocket)
+            print(len(self.guests))
+
+    async def broadcast(self, data):
+        # SEND TO EVERY LOGGED USER
+        for connection in self.connections:
+            await self.connections[connection].send_text(data)
+        # SEND TO EVERY USER IN HOME PAGE
+        for guest in self.guests:
+            try:
+                await guest.send_text(data)
+            except:
+                del self.guests[self.guests.index(guest)]
+
+    async def broadcastJson(self, data):
+        for connection in self.connections:
+            await self.connections[connection].send_json(data)
+
+    async def sendToAdmin(self, data):
+        if type(data) == type([]):
+            print("TAK")
+            await self.admin.send_json(data)
+        else:
+            await self.admin.send_text(data)
+
+    def disconnect(self, name: str):
+        print(name)
+        if name == "admin":
+            self.adminActive = False
+            self.admin = null
+        else:
+            self.connections.pop(name)
+
+    def destroyGuest(self, websocket: WebSocket):
+        del self.guests[self.guests.index(websocket)]
+
+    def isAdminActive(self):
+        return self.adminActive
+
+
+manager = ConnectionManager()
+
+
+@app.websocket("/ws/{name}")
+async def listen_to_players(
+    websocket: WebSocket, name: str, db: Session = Depends(get_db)
+):
+    await manager.connect(websocket, name)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            if name == "admin":
+                if data == "Start":
+                    for i in range(1, len(manager.connections), 2):
+                        if len(manager.connections) == i + 2:
+                            print("nieparzysta")
+                        else:
+                            manager.tasks.append(
+                                [
+                                    list(manager.connections)[i],
+                                    list(manager.connections)[i - 1],
+                                    crud.get_task(db).reference,
+                                ]
+                            )
+                            await manager.connections[
+                                list(manager.connections)[i]
+                            ].send_text(
+                                manager.tasks[len(manager.tasks) - 1][1]
+                                + "_"
+                                + manager.tasks[len(manager.tasks) - 1][2]
+                            )
+                            await manager.connections[
+                                list(manager.connections)[i - 1]
+                            ].send_text(
+                                manager.tasks[len(manager.tasks) - 1][0]
+                                + "_"
+                                + manager.tasks[len(manager.tasks) - 1][2]
+                            )
+                        await manager.sendToAdmin(manager.tasks)
+                else:
+                    await manager.broadcast(data)
+            else:
+                await manager.sendToAdmin(data)
+    except:
+        manager.disconnect(name)
+
+
+@app.websocket("/ws/active/admin")
+async def check_admin_active(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        if manager.isAdminActive():
+            await websocket.send_text("adminStarted")
+        else:
+            while True:
+                data = await websocket.receive_text()
+                if data == True:
+                    await manager.sendToAdmin(data)
+    except:
+        manager.destroyGuest(websocket)
+
+
+@app.post("/users/create/")
+def create_user(user: UserBase, db: Session = Depends(get_db)):
+    db_user = crud.get_user_by_name(db, name=user.name)
+    if db_user:
+        raise HTTPException(status_code=400, detail="name already used")
+    crud.create_user(db=db, user=user)
+    return signJWT(user.name)
+
+
+@app.get("/testing/")
+def test(db: Session = Depends(get_db)):
+    cr = crud.get_task(db)
+    print(cr.reference)
+    return cr
+
+
+@app.get("/users/", response_model=List[User])
+def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    users = crud.get_users(db, skip=skip, limit=limit)
+    return users
+
+
+@app.get("/users/{user_name}", response_model=User)
+def read_user(user_name: str, db: Session = Depends(get_db)):
+    db_user = crud.get_user(db, user_name=user_name)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
