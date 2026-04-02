@@ -4,18 +4,17 @@ services:
     container_name: matma-db
     restart: always
     environment:
-      MYSQL_DATABASE: matma
-      MYSQL_ROOT_PASSWORD: zaq1
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pzaq1"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
       interval: 5s
       timeout: 5s
       retries: 10
-    # ---------------------------
 
   app:
     build: .
