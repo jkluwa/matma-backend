@@ -16,7 +16,7 @@ services:
       timeout: 5s
       retries: 10
 
-  app:
+  backend:
     build: .
     container_name: matma-backend
     depends_on:
@@ -30,5 +30,17 @@ services:
       - DB_HOST=db
     restart: always
 
+  frontend:
+    build:
+      context: ../matma
+    container_name: matma-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    stdin_open: true 
+    tty: true
+    depends_on:
+      - backend
 volumes:
   mysql_data:
